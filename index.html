@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="twitter:creator" content="@NotThatRishi">
+    <meta property="og:description"
+          content="Convert text written in devanagiri or hinglish to kaithi script. Kaithi Script was used in Bihar for various literary works, as well as official purposes before Devanagiri became popular. Relive past and type in Kaithi script using this convinient tool.">
+    <title>Devanagiri (देवनागरी) ➡ Kaithi (𑂍𑂶𑂟𑂲) script</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js"></script>
+
+    <!-- Google transliterate API -->
+    <script src="./transliteration-bundle.js"></script>
+    <style>
+        * {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
+        }
+
+        body {
+            background-color: #f1f1f1;
+            margin: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            font-size: 1.3em;
+        }
+
+        #translation {
+            min-height: 50px;
+            width: 100%;
+            white-space: pre-line;
+            font-size: 1.5em;
+        }
+
+        .footer, h2 {
+            text-align: center;
+        }
+
+        details.what {
+            background: #f9f9f9;
+            border-radius: 5px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 5px;
+            max-width: 800px;
+            margin-bottom: 80px;
+        }
+
+        summary.what {
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            width: 100%;
+            position: fixed;
+            bottom: 0px;
+        }
+        footer * {
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <h2>देवनागिरी ➡ 𑂍𑂶𑂟𑂲</h2>
+    <div>Devnagiri text (Type in हिंदी or Hinglish and press enter)
+        <textarea id="transliterateTextarea"></textarea>
+    </div>
+    <div>Kaithi text
+        <button id="copy" data-clipboard-target="#translation">Copy</button>
+        <div id="translation"></div>
+    </div>
+</div>
+<details class="what">
+    <summary class="what">What is this?</summary>
+    Kaithi is a historical script used widely in parts of northern India, primarily in the former Awadh and Bihar.<br>
+    Though it is officially supported in Unicode, there aren't any convinient ways to write in it.
+    Using this tool, it's possible to convert existing Devanagiri to Kaithi or convert Hinglish text to Kaithi.
+    If you want to learn more check out its <a href="https://en.wikipedia.org/wiki/Kaithi">Wikipedia page</a> or <a href="http://std.dkuug.dk/JTC1/SC2/WG2/docs/N3389.pdf">this
+    link</a>.
+</details>
+<footer>© 2019 <a href="https://rishiraj.me">𑂩𑂱𑂭𑂱 𑂩𑂰𑂔</a>. Licensed under MIT Open Source License.
+    <details>
+        <summary id="copyright">Attribution</summary>
+        <ul>
+            <li>Transliteration Input Tools © Kaushal Subedi under MIT License</li>
+            <li>ClipboardJS © Zeno Rocha under MIT License</li>
+        </ul>
+
+    </details>
+</footer>
+<script>
+    new ClipboardJS('#copy');
+    var transliterationInput = document.getElementById("transliterateTextarea");
+    var translation = document.getElementById("translation");
+    transliterationInput.addEventListener("input",setKaithiText);
+    enableTransliteration(transliterationInput, "hi");
+    function setKaithiText() {
+        var kt = getKaithiText();
+        translation.innerText = kt;
+    }
+    function getKaithiText() {
+        let codePoints = Array.from(transliterationInput.value);
+        if (codePoints.length == 0) return "";
+        let kaithiCodePoints = codePoints.map(hindiToKaithi);
+        return kaithiCodePoints.reduce(function (output, curr) {
+            return output + curr;
+        });
+    }
+    function hindiToKaithi(hindiChar) {
+        var s = hindiChar.codePointAt(0);
+        //Vocalic R to r+i
+        if (s == 0x90B) {
+            return String.fromCodePoint(0x110A9) + String.fromCodePoint(0x110B1);
+        }
+        // Consonant vowel conversion
+        if (s >= 0x915 && s <= 0x921) {
+            s += 0x1108D - 0x915;
+        } else if (s == 0x922) {
+            s = 0x1109B;
+        } else if (s >= 0x923 && s <= 0x928) {
+            s += 0x1109D - 0x923;
+        } else if (s >= 0x92A && s <= 0x930) {
+            s += 0x110A3 - 0x92A;
+        } else if (s == 0x932) {
+            s = 0x110AA;
+        } else if (s >= 0x935 && s <= 0x939) {
+            s += 0x110AB - 0x935;
+        }
+        // Independent vowel sign conversion
+        else if (s >= 0x905 && s <= 0x90A) {
+            s += 0x11083 - 0x905;
+        } else if (s >= 0x90F && s <= 0x910) {
+            s += 0x11089 - 0x90F;
+        } else if (s >= 0x913 && s <= 0x914) {
+            s += 0x1108B - 0x0913;
+        }
+        // Dependent vowel sign conversion
+        else if (s >= 0x93E && s <= 0x942) {
+            s += 0x110B0 - 0x93E;
+        } else if (s >= 0x947 && s <= 0x948) {
+            s += 0x110B5 - 0x947;
+        } else if (s >= 0x94B && s <= 0x94C) {
+            s += 0x110B7 - 0x94B;
+        }
+        // Dots n stuff
+        else if (s >= 0x901 && s <= 0x903) {
+            s += 0x11080 - 0x901;
+        }
+        // Halant
+        else if (s == 0x94D) {
+            s = 0x110B9;
+        }
+        var k = String.fromCodePoint(s);
+        return k;
+    }
+</script>
+</body>
+</html>
